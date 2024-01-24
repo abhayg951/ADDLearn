@@ -27,7 +27,7 @@ class Course(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     course_name = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    img_url = Column(String, nullable=False)
+    img_url = Column(String, nullable=True, server_default=None)
     is_published = Column(Boolean, nullable=False, server_default="True")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(String, nullable=True)
@@ -37,6 +37,6 @@ class Course(Base):
 class Enrollments(Base):
     __tablename__ = "enrollments"
 
-    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), primary_key=True)
+    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), primary_key=True) # type: ignore
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     enroll_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))

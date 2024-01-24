@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Annotated
+from fastapi import Form, UploadFile
+from dataclasses import dataclass
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -52,13 +54,15 @@ class CourseResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class CreateCourse(BaseModel):
-    course_name: str
-    description: str
-    img_url: str
-    course_code: str
-    is_published: bool
-    category: int
+
+@dataclass
+class CreateCourse:
+    course_name: str = Form(...)
+    description: Optional[str] = Form(...)
+    course_code: str = Form(...)
+    is_published: bool = Form(...)
+    category: int = Form(...)
+
 
 class Perform_enroll(BaseModel):
     enroll_dir: int
