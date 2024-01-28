@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from .. import models, oauth2, schemas
 from typing import List, Optional, Annotated
 from ..cloudinary.uploadfile import upload_thumbnail
+from datetime import datetime
 
 routers = APIRouter(
     tags=['Courses'],
@@ -85,26 +86,26 @@ def course_enrollment(id: str, db: Session = Depends(get_db), current_user: mode
     db.refresh(enroll)
     return enroll
 
-# @routers.post("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
-# async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@routers.put("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
+async def update_course(id: int, img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
-#     try: 
-#         if (str(current_user.role).lower() == "student" or str(current_user.role).lower() == "teacher"):
-#             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
-#         print(current_user.role)
-#         img_url = upload_thumbnail(img)
-#         new_course = models.Course(
-#             course_name = course_schema.course_name,
-#             description = course_schema.description,
-#             img_url = img_url,
-#             is_published = course_schema.is_published,
-#             course_code = course_schema.course_code,
-#             category = course_schema.category
-#             )
-#         db.add(new_course)
-#         db.commit()
-#         db.refresh(new_course)
-#     except IntegrityError as e:
-#         print(e)
-#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Some error occur")
-#     return new_course
+    try: 
+        single_course = db.query(models.Course).filter(models.Course.id == id)
+        updated_course = single_course.first()
+        if updated_course is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"course with id {id} does not exists")
+        if (str(current_user.role).lower() == "student" or str(current_user.role).lower() == "teacher"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to update a course")
+        print(current_user.role)
+        img_url = upload_thumbnail(img)
+        course_dict = course_schema.__dict__
+        course_dict["img_url"] = img_url
+        course_dict["updated_at"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        print(course_dict)
+        single_course.update(course_dict, synchronize_session=False)
+        db.commit()
+    except IntegrityError as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong")
+    return single_course.first()
