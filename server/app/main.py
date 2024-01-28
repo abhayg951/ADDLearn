@@ -1,14 +1,13 @@
 from fastapi import FastAPI
-from .database import get_db
-from .routers import auth, users, courses
+from app.routers import auth, users, courses
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 
 app = FastAPI(
     title="ADDLearn"
 )
 
-print(get_db)
 
 origins = ["http://localhost:5173", "http://localhost:3000"]
 
@@ -29,3 +28,6 @@ def home():
 app.include_router(auth.routers)
 app.include_router(users.routers)
 app.include_router(courses.routers)
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", reload=True)
