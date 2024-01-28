@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, Form
 from sqlalchemy import func
 from ..database import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from .. import models, oauth2, schemas
 from typing import List, Optional, Annotated
 from ..cloudinary.uploadfile import upload_thumbnail
@@ -42,25 +43,30 @@ def get_single_course(id: int, db: Session = Depends(get_db)):
 @routers.post("", status_code=status.HTTP_201_CREATED, response_model=schemas.CourseSchema)
 async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
-    if (str(current_user.role) == "student" or str(current_user.role) == "teacher"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
-    print(current_user.role)
-    if img is None:
-        img_url = ""
-    else:
-        img_url = upload_thumbnail(img)
-    print("----------------------------------------")
-    new_course = models.Course(
-        course_name = course_schema.course_name,
-        description = course_schema.description,
-        img_url = img_url,
-        is_published = course_schema.is_published,
-        course_code = course_schema.course_code,
-        category = course_schema.category
-        )
-    db.add(new_course)
-    db.commit()
-    db.refresh(new_course)
+
+    try:
+        if (str(current_user.role) == "student" or str(current_user.role) == "teacher"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
+        print(current_user.role)
+        if img is None:
+            img_url = ""
+        else:
+            img_url = upload_thumbnail(img)
+        print("----------------------------------------")
+        new_course = models.Course(
+            course_name = course_schema.course_name,
+            description = course_schema.description,
+            img_url = img_url,
+            is_published = course_schema.is_published,
+            course_code = course_schema.course_code,
+            category = course_schema.category
+            )
+        db.add(new_course)
+        db.commit()
+        db.refresh(new_course)
+    except IntegrityError as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Some error occur")
     return new_course
 
 @routers.post("/enroll/{id}")
@@ -79,22 +85,26 @@ def course_enrollment(id: str, db: Session = Depends(get_db), current_user: mode
     db.refresh(enroll)
     return enroll
 
-@routers.post("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
-async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+# @routers.post("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
+# async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
-    if (str(current_user.role) == "student" or str(current_user.role) == "teacher"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
-    print(current_user.role)
-    img_url = upload_thumbnail(img)
-    new_course = models.Course(
-        course_name = course_schema.course_name,
-        description = course_schema.description,
-        img_url = img_url,
-        is_published = course_schema.is_published,
-        course_code = course_schema.course_code,
-        category = course_schema.category
-        )
-    db.add(new_course)
-    db.commit()
-    db.refresh(new_course)
-    return new_course
+#     try: 
+#         if (str(current_user.role).lower() == "student" or str(current_user.role).lower() == "teacher"):
+#             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
+#         print(current_user.role)
+#         img_url = upload_thumbnail(img)
+#         new_course = models.Course(
+#             course_name = course_schema.course_name,
+#             description = course_schema.description,
+#             img_url = img_url,
+#             is_published = course_schema.is_published,
+#             course_code = course_schema.course_code,
+#             category = course_schema.category
+#             )
+#         db.add(new_course)
+#         db.commit()
+#         db.refresh(new_course)
+#     except IntegrityError as e:
+#         print(e)
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Some error occur")
+#     return new_course
