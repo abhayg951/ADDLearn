@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, users, courses
+from .routers import auth, users, courses
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
