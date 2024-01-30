@@ -5,7 +5,8 @@ import uvicorn
 
 
 app = FastAPI(
-    title="ADDLearn"
+    title="ADDLearn",
+    docs_url="/"
 )
 
 
