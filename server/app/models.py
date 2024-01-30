@@ -27,6 +27,7 @@ class Course(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     course_name = Column(String, nullable=False)
     description = Column(String, nullable=False)
+    teacher = Column(String, nullable=False)
     img_url = Column(String, nullable=True, server_default=None)
     is_published = Column(Boolean, nullable=False, server_default="True")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
@@ -40,3 +41,16 @@ class Enrollments(Base):
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), primary_key=True) # type: ignore
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     enroll_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+
+class Chapters(Base):
+    __tablename__ = "chapters"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    chapter_no = Column(Integer, nullable=False)
+    video_url = Column(String, nullable=True)
+    pdf_url = Column(String, nullable=True)
+    is_published = Column(Boolean, nullable=False, server_default="False")
+    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE", name="course_fk"), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))

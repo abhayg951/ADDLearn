@@ -3,8 +3,9 @@ from sqlalchemy import func
 from ..database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from .. import models, oauth2, schemas
-from typing import List, Optional, Annotated
+from .. import models, oauth2
+from ..schemas import courses
+from typing import List, Optional
 from ..cloudinary.uploadfile import upload_thumbnail
 from datetime import datetime
 
@@ -13,7 +14,7 @@ routers = APIRouter(
     prefix="/course"
 )
 
-@routers.get("", status_code=status.HTTP_200_OK, response_model=List[schemas.CourseResponse])
+@routers.get("", status_code=status.HTTP_200_OK, response_model=List[courses.CourseResponse])
 def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= ""):
 
     if q != "":
@@ -29,7 +30,7 @@ def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= ""):
                 models.Course.id).all()
         return all_courses
 
-@routers.get('/{id}', status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
+@routers.get('/{id}', status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
 def get_single_course(id: int, db: Session = Depends(get_db)):
 
     course = db.query(models.Course).filter(models.Course.id == id)
@@ -41,8 +42,8 @@ def get_single_course(id: int, db: Session = Depends(get_db)):
     return find_course
 
 
-@routers.post("", status_code=status.HTTP_201_CREATED, response_model=schemas.CourseSchema)
-async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@routers.post("", status_code=status.HTTP_201_CREATED, response_model=courses.CourseSchema)
+async def upload_course(img: bytes = File(None), course_schema: courses.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
 
     try:
@@ -57,6 +58,7 @@ async def upload_course(img: bytes = File(None), course_schema: schemas.CreateCo
         new_course = models.Course(
             course_name = course_schema.course_name,
             description = course_schema.description,
+            teacher = course_schema.teacher,
             img_url = img_url,
             is_published = course_schema.is_published,
             course_code = course_schema.course_code,
@@ -86,8 +88,9 @@ def course_enrollment(id: str, db: Session = Depends(get_db), current_user: mode
     db.refresh(enroll)
     return enroll
 
-@routers.put("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.CourseSchema)
-async def update_course(id: int, img: bytes = File(None), course_schema: schemas.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+@routers.put("/{id}", status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
+async def update_course(id: int, img: bytes = File(None), course_schema: courses.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
     try: 
         single_course = db.query(models.Course).filter(models.Course.id == id)

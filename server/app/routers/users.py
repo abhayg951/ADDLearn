@@ -1,4 +1,5 @@
-from .. import schemas, models, utils
+from .. import models
+from ..schemas import user
 from fastapi import HTTPException, status, Depends, APIRouter
 from sqlalchemy.orm import Session
 from ..database import get_db
@@ -11,7 +12,7 @@ routers = APIRouter(
 )
 
 
-@routers.get("/me", response_model=schemas.UserResponse)
+@routers.get("/me", response_model=user.UserResponse)
 def current_user(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     user = db.query(models.User).filter(models.User.id == current_user.id).first()
     if not user:

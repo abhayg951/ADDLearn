@@ -1,7 +1,8 @@
 from fastapi import Depends, status, APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
-from .. import schemas, database, utils, models, oauth2
+from .. import database, utils, models, oauth2
+from ..schemas import user
 from datetime import datetime, timedelta, timezone
 from starlette.responses import Response
 
@@ -10,7 +11,7 @@ routers = APIRouter(
 )
 
 
-@routers.post("/sign-in", response_model=schemas.Token)
+@routers.post("/sign-in", response_model=user.Token)
 def login(response: Response, user_credential: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
 
     user = db.query(models.User).filter(models.User.email == user_credential.username).first()
@@ -31,8 +32,8 @@ def login(response: Response, user_credential: OAuth2PasswordRequestForm = Depen
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@routers.post("/sign-up", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+@routers.post("/sign-up", status_code=status.HTTP_201_CREATED, response_model=user.UserResponse)
+def create_user(user: user.UserCreate, db: Session = Depends(database.get_db)):
 
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"email already been taken")
