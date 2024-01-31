@@ -21,14 +21,14 @@ def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= "", cc: Opt
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
                 models.Course.id).filter(
-                    models.Course.course_name.ilike("%"+q+"%")).limit(limit).offset(skip).all()
+                    models.Course.course_name.ilike(f"%{q}%")).limit(limit).offset(skip).all()
         return all_courses
     
     if cc != "":
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
                 models.Course.id).filter(
-                    models.Course.course_code.ilike("%"+cc+"%")).limit(limit).offset(skip).all()
+                    models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
         return all_courses
     
     else:
