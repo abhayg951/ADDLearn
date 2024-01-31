@@ -18,10 +18,14 @@ routers = APIRouter(
 def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= ""):
 
     if q != "":
+        # all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+        #     models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+        #         models.Course.id).filter(
+        #             models.Course.course_name.ilike(q)).all()
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
                 models.Course.id).filter(
-                    models.Course.course_name.ilike(q)).all()
+                    models.Course.course_name.ilike("%"+q+"%")).all()
         return all_courses
     
     else:
