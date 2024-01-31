@@ -15,23 +15,26 @@ routers = APIRouter(
 )
 
 @routers.get("", status_code=status.HTTP_200_OK, response_model=List[courses.CourseResponse])
-def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= ""):
+def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= "", cc: Optional[str] = "", limit: int = 10, skip: int = 0):
 
     if q != "":
-        # all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
-        #     models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-        #         models.Course.id).filter(
-        #             models.Course.course_name.ilike(q)).all()
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
                 models.Course.id).filter(
-                    models.Course.course_name.ilike("%"+q+"%")).all()
+                    models.Course.course_name.ilike("%"+q+"%")).limit(limit).offset(skip).all()
+        return all_courses
+    
+    if cc != "":
+        all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+            models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+                models.Course.id).filter(
+                    models.Course.course_code.ilike("%"+cc+"%")).limit(limit).offset(skip).all()
         return all_courses
     
     else:
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                models.Course.id).all()
+                models.Course.id).limit(limit).offset(skip).all()
         return all_courses
 
 @routers.get('/{id}', status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
