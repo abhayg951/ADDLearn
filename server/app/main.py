@@ -14,7 +14,7 @@ async def swagger_ui_html():
     return get_swagger_ui_html(
         openapi_url="/openapi.json",
         title="ADDLearn",
-        swagger_favicon_url="https://drive.google.com/file/d/1Io-V9IEB3Kw-TPE2TEeyIZ9KWlIzLHms/view?usp=sharing"
+        swagger_favicon_url="https://res.cloudinary.com/dnlomsnxb/image/upload/v1706818037/favicon/xth5pjxoazxn3yi2lhjn.ico"
     )
 
 origins = ["http://localhost:5173", "http://localhost:3000"]
