@@ -9,7 +9,7 @@ cloudinary.config(
   api_secret = settings.api_secret 
 )
 
-def upload_thumbnail(file) -> str:
+async def upload_thumbnail(file) -> str:
     thumbnail_data = cloudinary.uploader.upload(
         file,
         folder = "image/",
@@ -17,10 +17,21 @@ def upload_thumbnail(file) -> str:
 
     return thumbnail_data['url']
 
-def upload_video(file, folder) -> str:
+async def upload_video(file, folder, file_name) -> str:
   video_data = cloudinary.uploader.upload_large(
         file,
-        folder = f"courses/video/{folder}"
+        folder = f"courses/video/{folder}",
+        resource_type = "video",
+        public_id = file_name
     )
-  
   return video_data['url']
+
+async def upload_modules(file, folder, file_name) -> str:
+
+  module_data = cloudinary.uploader.upload(
+        file,
+        folder = f"courses/modules/{folder}",
+        resource_type = "raw",
+        public_id = file_name
+    )
+  return module_data['url']

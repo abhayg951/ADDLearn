@@ -29,7 +29,7 @@ class CourseResponse(BaseModel):
 class CreateCourse:
     course_name: str = Form(...)
     teacher: str = Form(...)
-    description: Optional[str] = Form(...)
+    description: str = Form(None)
     course_code: str = Form(...)
     is_published: bool = Form(...)
     category: int = Form(...)

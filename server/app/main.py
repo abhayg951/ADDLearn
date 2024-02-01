@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import auth, users, courses, categories
+from .routers import auth, users, courses, categories, chapters
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -30,6 +30,7 @@ app.include_router(auth.routers)
 app.include_router(users.routers)
 app.include_router(courses.routers)
 app.include_router(categories.routers)
+app.include_router(chapters.routers)
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", reload=True)
