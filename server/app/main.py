@@ -6,10 +6,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 
 
-app = FastAPI(
-    title="ADDLearn",
-    docs_url=None
-)
+app = FastAPI(docs_url=None)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -19,8 +16,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def swagger_ui_html():
     return get_swagger_ui_html(
         openapi_url="/openapi.json",
-        title="FastAPI",
-        swagger_favicon_url="/static/favicon.ico"
+        title="AddLearn",
+        swagger_favicon_url="/static/favicon.ico",
     )
 
 origins = ["http://localhost:5173", "http://localhost:3000"]
