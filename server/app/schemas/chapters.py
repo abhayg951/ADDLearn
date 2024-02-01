@@ -26,3 +26,13 @@ class CreateChapter:
 
     class Config:
         from_attributes = True
+
+@dataclass
+class UpdateChapter:
+    title: str = Form(None)
+    description: str = Form(None)
+    chapter_no: int = Form(None)
+    is_published: bool = Form(False)
+
+    class Config:
+        from_attributes = True

@@ -67,3 +67,34 @@ async def upload_chapter(course_id: int,
     db.commit()
     db.refresh(new_chapter)
     return new_chapter
+
+
+# TODO: chapter updating remaining
+@routers.patch('/course/{course_id}/update/{chapter_id}', response_model=chapters.ChapterSchema, status_code=status.HTTP_201_CREATED)
+async def update_chapter(course_id: int, 
+                   notes: UploadFile = File(None),
+                   video: UploadFile = File(None), 
+                   chapter_schema: chapters.CreateChapter = Depends(), 
+                   db: Session = Depends(get_db), 
+                   current_user: models.User = Depends(get_current_user)):
+    
+    if str(current_user.role) != "admin":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not allowed to upload chapter")
+    
+    get_course_id = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if get_course_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
+
+    pdf_url = await upload_module(notes, chapter_schema.chapter_no)
+    video_url = await upload_Video(video, chapter_schema.chapter_no)
+
+    chapter_dict = chapter_schema.__dict__
+    chapter_dict['video_url'] = video_url
+    chapter_dict['pdf_url'] = pdf_url
+    chapter_dict['course_id'] = id
+
+    new_chapter = models.Chapters(**chapter_dict)
+    db.add(new_chapter)
+    db.commit()
+    db.refresh(new_chapter)
+    return new_chapter
