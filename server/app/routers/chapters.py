@@ -13,6 +13,20 @@ routers = APIRouter(
     prefix="/chapter"
 )
 
+
+@routers.get('/course/{course_id}')
+def get_course_chapters(course_id: int, db: Session = Depends(get_db)):
+
+    get_course_id = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if get_course_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
+    
+    course_data =  db.query(models.Chapters).filter(models.Chapters.course_id == course_id).order_by(models.Chapters.chapter_no.asc()).all()
+    if not course_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No chapters found of course {course_id}")
+    return course_data
+
+
 async def upload_module(notes, chapter_no) -> str:
     if notes is None:
         return ""
@@ -25,8 +39,8 @@ async def upload_Video(video, chapter_no) -> str:
     url = await uploadfile.upload_video(video.file, chapter_no, video.filename)
     return url
 
-@routers.post('/course/{id}/create', response_model=chapters.ChapterSchema, status_code=status.HTTP_201_CREATED)
-async def upload_chapter(id: int, 
+@routers.post('/course/{course_id}/create', response_model=chapters.ChapterSchema, status_code=status.HTTP_201_CREATED)
+async def upload_chapter(course_id: int, 
                    notes: UploadFile = File(None),
                    video: UploadFile = File(None), 
                    chapter_schema: chapters.CreateChapter = Depends(), 
@@ -36,9 +50,9 @@ async def upload_chapter(id: int,
     if str(current_user.role) != "admin":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not allowed to upload chapter")
     
-    get_course_id = db.query(models.Course).filter(models.Course.id == id).first()
+    get_course_id = db.query(models.Course).filter(models.Course.id == course_id).first()
     if get_course_id is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
 
     pdf_url = await upload_module(notes, chapter_schema.chapter_no)
     video_url = await upload_Video(video, chapter_schema.chapter_no)
@@ -53,15 +67,3 @@ async def upload_chapter(id: int,
     db.commit()
     db.refresh(new_chapter)
     return new_chapter
-
-@routers.get('/course/{id}')
-def get_course_chapters(id: int, db: Session = Depends(get_db)):
-
-    get_course_id = db.query(models.Course).filter(models.Course.id == id).first()
-    if get_course_id is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {id} not found")
-    
-    course_data =  db.query(models.Chapters).filter(models.Chapters.course_id == id).order_by(models.Chapters.chapter_no.asc()).all()
-    if not course_data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No chapters found of course {id}")
-    return course_data
