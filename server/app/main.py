@@ -4,11 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
-
+import os
 
 app = FastAPI(docs_url=None)
 
 
+script_dir = os.path.dirname(__file__)
+st_abs_file_path = os.path.join(script_dir, "static/")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
