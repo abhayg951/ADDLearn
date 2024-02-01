@@ -9,15 +9,12 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI(docs_url=None)
 
 
-app.mount("/static", StaticFiles(directory="/server/static"), name="static")
-
-
 @app.get("/", include_in_schema=False)
 async def swagger_ui_html():
     return get_swagger_ui_html(
         openapi_url="/openapi.json",
-        title="AddLearn",
-        swagger_favicon_url="/static/favicon.ico",
+        title="ADDLearn",
+        swagger_favicon_url="https://drive.google.com/file/d/1Io-V9IEB3Kw-TPE2TEeyIZ9KWlIzLHms/view?usp=sharing"
     )
 
 origins = ["http://localhost:5173", "http://localhost:3000"]
