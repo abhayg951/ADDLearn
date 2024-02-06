@@ -99,7 +99,7 @@ def course_enrollment(id: str, db: Session = Depends(get_db), current_user: mode
     return enroll
 
 
-@routers.put("/{id}", status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
+@routers.patch("/{id}", status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
 async def update_course(id: str, img: bytes = File(None), course_schema: courses.UpdateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
     if not id.isnumeric():
@@ -113,17 +113,24 @@ async def update_course(id: str, img: bytes = File(None), course_schema: courses
         if (str(current_user.role).lower() == "student" or str(current_user.role).lower() == "teacher"):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to update a course")
         print(current_user.role)
-        img_url = upload_thumbnail(img)
+        
         course_dict = course_schema.__dict__
-        course_dict["img_url"] = img_url
+        if img is not None:
+            img_url = upload_thumbnail(img)
+            course_dict["img_url"] = img_url
         course_dict["updated_at"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        print(type(course_dict))
+        filtered_dict = {key: value for key, value in course_dict.items() if value is not None}
         print(course_dict)
-        single_course.update(course_dict, synchronize_session=False)
+        single_course.update(filtered_dict, synchronize_session=False)
         db.commit()
+        db.refresh(single_course.first())
     except IntegrityError as e:
         print(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong")
+    
     return single_course.first()
+
 
 @routers.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
 def delete_course(cid: str, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):

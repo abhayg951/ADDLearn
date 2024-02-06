@@ -13,6 +13,7 @@ class CourseSchema(BaseModel):
     course_code: str
     is_published: bool
     created_at: datetime
+    updated_at : Optional[str]
 
     class Config:
         from_attributes = True
