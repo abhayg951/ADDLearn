@@ -14,6 +14,7 @@ class CourseSchema(BaseModel):
     is_published: bool
     created_at: datetime
     updated_at : Optional[str]
+    category: int
 
     class Config:
         from_attributes = True
