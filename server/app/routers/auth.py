@@ -47,3 +47,8 @@ def create_user(user: user.UserCreate, db: Session = Depends(database.get_db)):
     db.refresh(new_user)
 
     return new_user
+
+@routers.get("/logout")
+async def user_logout(response: Response):
+    response.delete_cookie(key="access_token")
+    return Response(status_code=status.HTTP_200_OK)

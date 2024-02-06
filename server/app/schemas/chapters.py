@@ -32,7 +32,7 @@ class UpdateChapter:
     title: str = Form(None)
     description: str = Form(None)
     chapter_no: int = Form(None)
-    is_published: bool = Form(False)
+    is_published: bool = Form(None)
 
     class Config:
         from_attributes = True

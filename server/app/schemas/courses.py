@@ -40,3 +40,16 @@ class CreateCourse:
 
 class Perform_enroll(BaseModel):
     enroll_dir: int
+
+
+@dataclass
+class UpdateCourse:
+    course_name: str = Form(None)
+    teacher: str = Form(None)
+    description: str = Form(None)
+    course_code: str = Form(None)
+    is_published: bool = Form(None)
+    category: int = Form(None)
+
+    class Config:
+        from_attributes = True

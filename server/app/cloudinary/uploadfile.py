@@ -9,13 +9,12 @@ cloudinary.config(
   api_secret = settings.api_secret 
 )
 
-async def upload_thumbnail(file) -> str:
+def upload_thumbnail(file) -> str:
     thumbnail_data = cloudinary.uploader.upload(
         file,
         folder = "image/",
     )
-
-    return thumbnail_data['url']
+    return thumbnail_data['secure_url']
 
 async def upload_video(file, folder, file_name) -> str:
   video_data = cloudinary.uploader.upload_large(

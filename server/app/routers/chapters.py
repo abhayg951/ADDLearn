@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException, File, status, UploadFile
+from fastapi import Depends, APIRouter, HTTPException, File, status, UploadFile, Path
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models
@@ -69,32 +69,39 @@ async def upload_chapter(course_id: int,
     return new_chapter
 
 
-# TODO: chapter updating remaining
-@routers.patch('/course/{course_id}/update/{chapter_id}', response_model=chapters.ChapterSchema, status_code=status.HTTP_201_CREATED)
-async def update_chapter(course_id: int, 
-                   notes: UploadFile = File(None),
-                   video: UploadFile = File(None), 
-                   chapter_schema: chapters.CreateChapter = Depends(), 
-                   db: Session = Depends(get_db), 
-                   current_user: models.User = Depends(get_current_user)):
-    
+@routers.put('/course/{course_id}/update/{chapter_id}', status_code=status.HTTP_201_CREATED)
+async def update_chapter(course_id: int,
+                         chapter_id: int,
+                         notes: UploadFile = File(None),
+                         video: UploadFile = File(None), 
+                         chapter_schema: chapters.UpdateChapter = Depends(), 
+                         db: Session = Depends(get_db), 
+                         current_user: models.User = Depends(get_current_user)):
+
     if str(current_user.role) != "admin":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not allowed to upload chapter")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not allowed to update chapter")
     
     get_course_id = db.query(models.Course).filter(models.Course.id == course_id).first()
     if get_course_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
+    
+    get_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id)
+    if get_chapter.first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Chapter of id {chapter_id} not found")
+    try:
+        chapter_dict = chapter_schema.__dict__
 
-    pdf_url = await upload_module(notes, chapter_schema.chapter_no)
-    video_url = await upload_Video(video, chapter_schema.chapter_no)
+        if video is not None:
+            video_url = await upload_Video(video, chapter_schema.chapter_no)
+            chapter_dict['video_url'] = video_url
+        
+        if notes is not None:
+            pdf_url = await upload_module(notes, chapter_schema.chapter_no)
+            chapter_dict['pdf_url'] = pdf_url
 
-    chapter_dict = chapter_schema.__dict__
-    chapter_dict['video_url'] = video_url
-    chapter_dict['pdf_url'] = pdf_url
-    chapter_dict['course_id'] = id
-
-    new_chapter = models.Chapters(**chapter_dict)
-    db.add(new_chapter)
-    db.commit()
-    db.refresh(new_chapter)
-    return new_chapter
+        get_chapter.update(chapter_dict, synchronize_session=False)
+        db.commit()
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Something went wrong")    
+    return get_chapter.first()
