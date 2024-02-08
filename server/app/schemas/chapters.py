@@ -1,12 +1,13 @@
 from pydantic import BaseModel
 from dataclasses import dataclass
 from fastapi import Form
+from typing import Optional
 from datetime import datetime
 
 class ChapterSchema(BaseModel):
     id: int
     title : str
-    description: str | None
+    description: Optional[str]
     chapter_no: int
     video_url: str
     pdf_url: str
