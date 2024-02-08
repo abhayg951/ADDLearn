@@ -6,7 +6,7 @@ from datetime import datetime
 class ChapterSchema(BaseModel):
     id: int
     title : str
-    description: str
+    description: str | None
     chapter_no: int
     video_url: str
     pdf_url: str
