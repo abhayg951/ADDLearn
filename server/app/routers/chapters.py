@@ -60,7 +60,7 @@ async def upload_chapter(course_id: int,
     chapter_dict = chapter_schema.__dict__
     chapter_dict['video_url'] = video_url
     chapter_dict['pdf_url'] = pdf_url
-    chapter_dict['course_id'] = id
+    chapter_dict['course_id'] = course_id
 
     new_chapter = models.Chapters(**chapter_dict)
     db.add(new_chapter)
@@ -69,15 +69,17 @@ async def upload_chapter(course_id: int,
     return new_chapter
 
 
-@routers.put('/course/{course_id}/update/{chapter_id}', status_code=status.HTTP_201_CREATED)
-async def update_chapter(course_id: int,
-                         chapter_id: int,
+@routers.patch('/course/{course_id}/update/{chapter_id}', status_code=status.HTTP_201_CREATED)
+async def update_chapter(course_id: str,
+                         chapter_id: str,
                          notes: UploadFile = File(None),
                          video: UploadFile = File(None), 
                          chapter_schema: chapters.UpdateChapter = Depends(), 
                          db: Session = Depends(get_db), 
                          current_user: models.User = Depends(get_current_user)):
-
+    
+    if not course_id.isnumeric() or not chapter_id.isnumeric():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide valid param")
     if str(current_user.role) != "admin":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not allowed to update chapter")
     
@@ -85,9 +87,10 @@ async def update_chapter(course_id: int,
     if get_course_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
     
-    get_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id)
+    get_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id, models.Chapters.course_id == course_id)
     if get_chapter.first() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Chapter of id {chapter_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Chapter not found")
+    
     try:
         chapter_dict = chapter_schema.__dict__
 
@@ -98,10 +101,20 @@ async def update_chapter(course_id: int,
         if notes is not None:
             pdf_url = await upload_module(notes, chapter_schema.chapter_no)
             chapter_dict['pdf_url'] = pdf_url
+        
+        filtered_dict = {key: value for key, value in chapter_dict.items() if value is not None}
 
-        get_chapter.update(chapter_dict, synchronize_session=False)
+        get_chapter.update(filtered_dict, synchronize_session=False)
         db.commit()
+        db.refresh(get_chapter.first())
     except Exception as e:
         print(e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Something went wrong")    
     return get_chapter.first()
+
+#TODO: complete delete query 
+@routers.delete("/{course_id}")
+def delete_chapter(chapter_id: int, course_id: int, db: Session = Depends(get_db)):
+    find_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id, models.Chapters.course_id == course_id)
+    if find_chapter.first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter Not found")
