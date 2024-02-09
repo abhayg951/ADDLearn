@@ -26,6 +26,13 @@ def get_course_chapters(course_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No chapters found of course {course_id}")
     return course_data
 
+@routers.get('/{chapter_id}', response_model=chapters.ChapterSchema)
+def get_single_chapter(chapter_id: int, db: Session = Depends(get_db)):
+    
+    chapter_data =  db.query(models.Chapters).filter(models.Chapters.id == chapter_id).first()
+    if not chapter_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Chapter not found")
+    return chapter_data
 
 async def upload_module(notes, chapter_no) -> str:
     if notes is None:
@@ -112,9 +119,12 @@ async def update_chapter(course_id: str,
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Something went wrong")    
     return get_chapter.first()
 
-#TODO: complete delete query 
-@routers.delete("/{course_id}")
-def delete_chapter(chapter_id: int, course_id: int, db: Session = Depends(get_db)):
-    find_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id, models.Chapters.course_id == course_id)
+@routers.delete("/{chapter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chapter(chapter_id: int, db: Session = Depends(get_db), get_user: models.User = Depends(get_current_user)):
+    if str(get_user.role) != "admin":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not allowed to delete this chapter")
+    find_chapter = db.query(models.Chapters).filter(models.Chapters.id == chapter_id)
     if find_chapter.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter Not found")
+    find_chapter.delete()
+    db.commit()

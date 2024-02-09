@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from .. import models, oauth2
 from ..schemas import courses
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from ..cloudinary.uploadfile import upload_thumbnail
 from datetime import datetime
 
@@ -15,38 +15,41 @@ routers = APIRouter(
 )
 
 @routers.get("", status_code=status.HTTP_200_OK, response_model=List[courses.CourseResponse])
-def get_all_courses(db: Session = Depends(get_db), q: Optional[str]= "", cc: Optional[str] = "", limit: int = 10, skip: int = 0):
+def get_all_courses(db: Session = Depends(get_db), 
+                    pub: bool = True, 
+                    q: Optional[str]= "", 
+                    cc: Optional[str] = "",
+                    cate: Optional[int] = None,
+                    limit: int = 10, 
+                    skip: int = 0):
+    '''By Default this will return all the published courses. Change the pub param to view the none published course'''
 
-    if q != "":
+    if cate is not None:
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
             models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                models.Course.id).filter(
-                    models.Course.course_name.ilike(f"%{q}%")).limit(limit).offset(skip).all()
+                models.Course.id).filter(models.Course.is_published == pub,
+                                         models.Course.category == cate,
+                                         models.Course.course_name.ilike(f"%{q}%"),
+                                         models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
         return all_courses
-    
-    if cc != "":
-        all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
-            models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                models.Course.id).filter(
-                    models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
-        return all_courses
-    
     else:
         all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
-            models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                models.Course.id).limit(limit).offset(skip).all()
+                models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+                    models.Course.id).filter(models.Course.is_published == pub,
+                                            models.Course.course_name.ilike(f"%{q}%"),
+                                            models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
         return all_courses
 
 @routers.get('/{id}', status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
-def get_single_course(id: str, db: Session = Depends(get_db)):
-
+def get_single_course(id: str, pub: bool = True, db: Session = Depends(get_db)):
+    '''By default this will return the published course. Change the pub pram to view the non-published course'''
     if not id.isnumeric():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please provide a valid param")
-    course = db.query(models.Course).filter(models.Course.id == id)
+    course = db.query(models.Course).filter(models.Course.id == id, models.Course.is_published == pub)
 
     find_course = course.first()
     if not find_course:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course with id '{id}' not found")
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail={})
     
     return find_course
 
