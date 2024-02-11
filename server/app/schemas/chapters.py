@@ -9,8 +9,8 @@ class ChapterSchema(BaseModel):
     title : str
     description: Optional[str]
     chapter_no: int
-    video_url: str
-    resources_url: str
+    video_url: Optional[str]
+    resources_url: Optional[str]
     is_published: bool
     course_id: int
     created_at: datetime
