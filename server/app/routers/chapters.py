@@ -61,12 +61,12 @@ async def upload_chapter(course_id: int,
     if get_course_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Course of id {course_id} not found")
 
-    pdf_url = await upload_module(notes, chapter_schema.chapter_no)
-    video_url = await upload_Video(video, chapter_schema.chapter_no)
+    # resources_url = await upload_module(notes, chapter_schema.chapter_no)
+    # video_url = await upload_Video(video, chapter_schema.chapter_no)
 
     chapter_dict = chapter_schema.__dict__
-    chapter_dict['video_url'] = video_url
-    chapter_dict['pdf_url'] = pdf_url
+    # chapter_dict['video_url'] = video_url
+    # chapter_dict['resources_url'] = resources_url
     chapter_dict['course_id'] = course_id
 
     new_chapter = models.Chapters(**chapter_dict)

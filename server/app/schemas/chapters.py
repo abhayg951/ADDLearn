@@ -10,7 +10,7 @@ class ChapterSchema(BaseModel):
     description: Optional[str]
     chapter_no: int
     video_url: str
-    pdf_url: str
+    resources_url: str
     is_published: bool
     course_id: int
     created_at: datetime
@@ -24,6 +24,8 @@ class CreateChapter:
     description: str = Form(None)
     chapter_no: int = Form(...)
     is_published: bool = Form(False)
+    video_url: str = Form(None)
+    resources_url: str = Form(None)
 
     class Config:
         from_attributes = True

@@ -50,7 +50,7 @@ class Chapters(Base):
     description = Column(String, nullable=True)
     chapter_no = Column(Integer, nullable=False)
     video_url = Column(String, nullable=True)
-    pdf_url = Column(String, nullable=True)
+    resources_url = Column(String, nullable=True)
     is_published = Column(Boolean, nullable=False, server_default="False")
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE", name="course_fk"), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
