@@ -16,36 +16,52 @@ routers = APIRouter(
 
 @routers.get("", status_code=status.HTTP_200_OK, response_model=List[courses.CourseResponse])
 def get_all_courses(db: Session = Depends(get_db), 
-                    pub: bool = True, 
-                    q: Optional[str]= "", 
+                    pub: str = "",
+                    q: Optional[str]= "",
                     cc: Optional[str] = "",
                     cate: Optional[int] = None,
                     limit: int = 10, 
                     skip: int = 0):
-    '''By Default this will return all the published courses. Change the pub param to view the none published course'''
+    '''By Default this will return all the courses. To view the list of published courses provide the 'pub' param with value equal to 'published' '''
 
-    if cate is not None:
-        all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
-            models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                models.Course.id).filter(models.Course.is_published == pub,
-                                         models.Course.category == cate,
-                                         models.Course.course_name.ilike(f"%{q}%"),
-                                         models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
-        return all_courses
-    else:
-        all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+    if pub == "":
+        if cate is not None:
+            all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
                 models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
-                    models.Course.id).filter(models.Course.is_published == pub,
+                    models.Course.id).filter(models.Course.category == cate,
                                             models.Course.course_name.ilike(f"%{q}%"),
                                             models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
-        return all_courses
-
+            return all_courses
+        else:
+            all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+                    models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+                        models.Course.id).filter(models.Course.course_name.ilike(f"%{q}%"),
+                                                models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
+            return all_courses
+    
+    elif pub == "published":
+        if cate is not None:
+            all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+            models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+                models.Course.id).filter(models.Course.is_published == True,
+                                        models.Course.category == cate,
+                                        models.Course.course_name.ilike(f"%{q}%"),
+                                        models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
+            return all_courses
+        else:
+            all_courses = db.query(models.Course, func.count(models.Enrollments.course_id).label("enrollments")).join(
+                models.Enrollments, models.Enrollments.course_id == models.Course.id, isouter=True).group_by(
+                    models.Course.id).filter(models.Course.is_published == True,
+                                            models.Course.course_name.ilike(f"%{q}%"),
+                                            models.Course.course_code.ilike(f"%{cc}%")).limit(limit).offset(skip).all()
+            return all_courses
 @routers.get('/{id}', status_code=status.HTTP_200_OK, response_model=courses.CourseSchema)
-def get_single_course(id: str, pub: bool = True, db: Session = Depends(get_db)):
-    '''By default this will return the published course. Change the pub pram to view the non-published course'''
+def get_single_course(id: str, db: Session = Depends(get_db)):
+    '''This will allow you to fetch the single course using the course id'''
     if not id.isnumeric():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please provide a valid param")
-    course = db.query(models.Course).filter(models.Course.id == id, models.Course.is_published == pub)
+    
+    course = db.query(models.Course).filter(models.Course.id == id)
 
     find_course = course.first()
     if not find_course:
@@ -56,7 +72,7 @@ def get_single_course(id: str, pub: bool = True, db: Session = Depends(get_db)):
 
 @routers.post("", status_code=status.HTTP_201_CREATED, response_model=courses.CourseSchema)
 async def upload_course(img: bytes = File(None), course_schema: courses.CreateCourse = Depends(), db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
-
+    ''' This will allow you to upload the course. Only admin can upload the course. '''
     try:
         if (str(current_user.role) == "student" or str(current_user.role) == "teacher"):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to upload a course")
@@ -85,7 +101,6 @@ async def upload_course(img: bytes = File(None), course_schema: courses.CreateCo
 
 @routers.post("/enroll/{id}")
 def course_enrollment(id: str, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
-
     if not id.isnumeric():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please provide a valid param")
     course = db.query(models.Course).filter(models.Course.id == id).first()
