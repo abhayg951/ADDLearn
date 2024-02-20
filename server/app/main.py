@@ -17,7 +17,7 @@ async def swagger_ui_html():
         swagger_favicon_url="https://res.cloudinary.com/dnlomsnxb/image/upload/v1706818037/favicon/xth5pjxoazxn3yi2lhjn.ico"
     )
 
-origins = ["http://localhost:5173", "http://localhost:3000"]
+origins = ["http://localhost:5173", "http://localhost:3000", "*"]
 
 app.add_middleware(
     CORSMiddleware,
