@@ -36,6 +36,8 @@ class UpdateChapter:
     description: str = Form(None)
     chapter_no: int = Form(None)
     is_published: bool = Form(None)
+    video_url: str = Form(None)
+    resources_url: str = Form(None)
 
     class Config:
         from_attributes = True

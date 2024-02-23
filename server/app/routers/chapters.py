@@ -101,13 +101,13 @@ async def update_chapter(course_id: str,
     try:
         chapter_dict = chapter_schema.__dict__
 
-        if video is not None:
-            video_url = await upload_Video(video, chapter_schema.chapter_no)
-            chapter_dict['video_url'] = video_url
+        # if video is not None:
+        #     video_url = await upload_Video(video, chapter_schema.chapter_no)
+        #     chapter_dict['video_url'] = video_url
         
-        if notes is not None:
-            pdf_url = await upload_module(notes, chapter_schema.chapter_no)
-            chapter_dict['pdf_url'] = pdf_url
+        # if notes is not None:
+        #     pdf_url = await upload_module(notes, chapter_schema.chapter_no)
+        #     chapter_dict['pdf_url'] = pdf_url
         
         filtered_dict = {key: value for key, value in chapter_dict.items() if value is not None}
 
