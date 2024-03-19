@@ -55,3 +55,11 @@ class UpdateCourse:
 
     class Config:
         from_attributes = True
+    
+
+class RateCourseSchema(BaseModel):
+    remarks: str
+    rating: int = 1
+
+    class Config:
+        from_attributes = True

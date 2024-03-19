@@ -109,7 +109,7 @@ def course_enrollment(id: str, db: Session = Depends(get_db), current_user: mode
     find_enrollment_query = db.query(models.Enrollments).filter(models.Enrollments.course_id == id, models.Enrollments.user_id == current_user.id)
     find_enrollment = find_enrollment_query.first()
     if find_enrollment:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User {current_user.id} has already enrolled in course {id}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User already enrolled in course {id}")
     enroll = models.Enrollments(course_id = id, user_id=current_user.id)
     db.add(enroll)
     db.commit()
@@ -162,3 +162,49 @@ def delete_course(cid: str, db: Session = Depends(get_db), current_user: models.
     find_course.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@routers.put('/{course_id}/progress/{chapter_id}')
+def update_course_progress(course_id: int, chapter_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+    avail_chapters_set = set()
+    completed_chapters_set = set()
+
+    # fetching the chapters associated to a particular course
+    get_chapters = db.query(models.Chapters.id).filter(models.Chapters.course_id == course_id).all()
+    for chapter in get_chapters:
+        avail_chapters_set.add(chapter[0])
+    print(f"Available chapters - {avail_chapters_set}")
+
+    # checking if provided chapter_id belongs to the provided course_id
+    if chapter_id not in avail_chapters_set:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="chapter not available")
+
+    #fetching the completed chapters
+    get_enrollment_data = db.query(models.Enrollments).filter(models.Enrollments.course_id == course_id, models.Enrollments.user_id == current_user.id)
+
+    completed_chapters_list = get_enrollment_data.first().completed_chapters
+    if completed_chapters_list is None:
+        # completed_chapters_set = set()
+        completed_chapters_set.add(chapter_id)
+        print(f"completed chapters set - {completed_chapters_set}")
+    else:
+        # print(f"completed chapter list - {completed_chapters_list}")
+        completed_chapters_set = {x for x in completed_chapters_list}
+        completed_chapters_set.add(chapter_id)
+        print(f"completed chapters set - {completed_chapters_set}")
+    
+    print(not avail_chapters_set.difference(completed_chapters_set))
+
+    if not avail_chapters_set.difference(completed_chapters_set):
+        get_enrollment_data.update({
+            models.Enrollments.completed_chapters: completed_chapters_set,
+            models.Enrollments.is_completed: True
+            }, synchronize_session=False)
+        db.commit()
+        db.refresh(get_enrollment_data.first())
+    else:
+        get_enrollment_data.update(
+            {models.Enrollments.completed_chapters: completed_chapters_set}, synchronize_session=False)
+        db.commit()
+        db.refresh(get_enrollment_data.first())
+    return get_enrollment_data.first()

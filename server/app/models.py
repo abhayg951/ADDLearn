@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, String, TIMESTAMP, Integer, text, Boolean, ForeignKey
+from sqlalchemy import Column, String, TIMESTAMP, Integer, text, Boolean, ForeignKey, ARRAY
 from sqlalchemy.orm import relationship
 
 class User(Base):
@@ -22,6 +22,7 @@ class Category(Base):
 
 
 class Course(Base):
+    # TODO: add the summary column, course_duration column. 
     __tablename__ = 'courses'
 
     id = Column(Integer, primary_key=True, nullable=False)
@@ -41,6 +42,8 @@ class Enrollments(Base):
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), primary_key=True) # type: ignore
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     enroll_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+    completed_chapters = Column(ARRAY(Integer), nullable=True)
+    is_completed = Column(Boolean, nullable=True, server_default="False")
 
 class Chapters(Base):
     __tablename__ = "chapters"
@@ -54,3 +57,13 @@ class Chapters(Base):
     is_published = Column(Boolean, nullable=False, server_default="False")
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE", name="course_fk"), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
+
+class Ratings(Base):
+
+    __tablename__ = "ratings"
+    id = Column(Integer, primary_key=True, nullable=False)
+    course = Column(Integer, ForeignKey("courses.id",ondelete="CASCADE", name="course_rating_fk"), nullable=False)
+    user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE", name="user_rating_fk"), nullable=False)
+    rating = Column(Integer, nullable=False, server_default="1")
+    remarks = Column(String, nullable=True)
+    

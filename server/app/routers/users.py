@@ -21,8 +21,16 @@ def current_user(db: Session = Depends(get_db), current_user: models.User = Depe
     return user
 
 @routers.get('/me/courses')
-def current_user_course_enroll(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def user_enrollments(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     # user_enrolls = db.query(models.User.id, models.Enrollments.course_id, models.Enrollments.enroll_at).outerjoin(models.Enrollments, models.User.id == models.Enrollments.user_id).filter(models.User.id == current_user.id).all()
     # result_dict = [{'user_id': user_id, 'course_id': course_id, 'enroll_at': enroll_at} for user_id, course_id, enroll_at in user_enrolls]
     user_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id).all()
     return user_enroll
+
+# @routers.get('/me/courses')
+# def user_single_enrollment(cid: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+#     single_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id, models.Enrollments.course_id == cid)
+#     if not single_enroll.first():
+#         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="Not enrolled")
+    
+    # pass
