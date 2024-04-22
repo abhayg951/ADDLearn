@@ -6,3 +6,4 @@ https://github.com/DevanshSK/add-learn
 
 ### How to Run 
 
+- Go to the `server` folder
