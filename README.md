@@ -20,7 +20,7 @@ https://github.com/DevanshSK/add-learn
     - API_SECRET 
 - Create the virtual environment.
 - Install all the dependencies from the `requirements.txt` file.
-      - `For windows` -> `pip install -r requirements.txt`
-      - `for Linux/mac` -> `pip3 install -r requirements.txt`
+- `For windows` -> `pip install -r requirements.txt`
+- `for Linux/mac` -> `pip3 install -r requirements.txt`
   - Now, run the `uvicorn` using the following command `uvicorn app.main:app --reload`.
     
