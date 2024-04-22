@@ -6,4 +6,15 @@ https://github.com/DevanshSK/add-learn
 
 ### How to Run 
 
-- Go to the `server` folder
+- Go to the `server` folder, and create the `.env` file with following values-
+    - DATABASE_NAME
+    - DATABASE_HOST
+    - DATABASE_PORT
+    - DATABASE_USER
+    - DATABASE_PASSWORD
+    - SECRET_KEY
+    - ALGORITHM
+    - ACCESS_KEY_EXPIRE_MINUTES
+    - CLOUD_NAME
+    - API_KEY
+    - API_SECRET 
