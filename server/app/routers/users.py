@@ -1,5 +1,5 @@
 from .. import models
-from ..schemas import user
+from ..schemas import user, enrollment
 from fastapi import HTTPException, status, Depends, APIRouter
 from sqlalchemy.orm import Session
 from ..database import get_db
@@ -27,10 +27,11 @@ def user_enrollments(db: Session = Depends(get_db), current_user: models.User = 
     user_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id).all()
     return user_enroll
 
-# @routers.get('/me/courses')
-# def user_single_enrollment(cid: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-#     single_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id, models.Enrollments.course_id == cid)
-#     if not single_enroll.first():
-#         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="Not enrolled")
-    
-    # pass
+#TODO: create the user single enrollment 
+@routers.get('/me/courses/{cid}', response_model=enrollment.EnrollmentSchema)
+def user_single_enrollment(cid: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    ''' this will show user's single enrollment '''
+    single_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id, models.Enrollments.course_id == cid)
+    if not single_enroll.first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enrolled")
+    return single_enroll.first()

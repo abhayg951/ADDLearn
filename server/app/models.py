@@ -44,6 +44,7 @@ class Enrollments(Base):
     enroll_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"))
     completed_chapters = Column(ARRAY(Integer), nullable=True)
     is_completed = Column(Boolean, nullable=True, server_default="False")
+    course = relationship("Course")
 
 class Chapters(Base):
     __tablename__ = "chapters"

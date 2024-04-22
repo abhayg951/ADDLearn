@@ -1,26 +1,39 @@
-from fastapi import Response, APIRouter, Depends
-from database import get_db
+from fastapi import Response, APIRouter, Depends, HTTPException, status
+from ..database import get_db
 from sqlalchemy.orm import Session
+from ..schemas import courses
+from .. import models
+from .. import oauth2
 
-router = APIRouter(
-    tags=["Course Rating"]
-    prefix="/rating"
+routers = APIRouter(
+    tags=["Course Rating"],
+    prefix="/rate"
 )
 
-@router.post("/{course_id}")
-def rate_course(current_user: Session = Depends(get_db)):
-    pass
+# TODO: Create the rating system
 
-# @routers.post("/{course_id}/rate")
-# def rate_course(course_id: int,
-#                 rate_schema: courses.RateCourseSchema, 
-#                 db: Session = Depends(get_db),
-#                 current_user: models.User = Depends(oauth2.get_current_user)):
+@routers.post("/{course_id}", response_model=courses.RateCourseResponse)
+def rate_course(course_id: int,
+                rate_schema: courses.RateCourseSchema, 
+                db: Session = Depends(get_db),
+                current_user: models.User = Depends(oauth2.get_current_user)):
     
-#     get_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id)
-#     if not get_enroll.first():
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You must enroll in the course")
-    
-#     # check enrollment
+    get_enroll = db.query(models.Enrollments).filter(models.Enrollments.user_id == current_user.id, models.Enrollments.course_id == course_id)
+    # check enrollment
+    print(get_enroll.first())
+    if get_enroll.first() is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You must enroll in the course")
 
-#     return current_user
+    if not get_enroll.first().is_completed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You must complete the course")
+    
+    get_rate = db.query(models.Ratings).filter(models.Ratings.course == course_id, models.Ratings.user == current_user.id).first()
+    if get_rate:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already rated the course")
+
+    print(rate_schema.model_dump())
+    user_rating = models.Ratings(**rate_schema.model_dump(), course = course_id, user = current_user.id)
+    db.add(user_rating)
+    db.commit()
+    db.refresh(user_rating)
+    return user_rating

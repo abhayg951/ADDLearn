@@ -58,8 +58,15 @@ class UpdateCourse:
     
 
 class RateCourseSchema(BaseModel):
-    remarks: str
+    remarks: Optional[str]
     rating: int = 1
 
     class Config:
         from_attributes = True
+
+class RateCourseResponse(BaseModel):
+    id: int
+    user: int
+    course: int
+    remarks: Optional[str]
+    rating: int

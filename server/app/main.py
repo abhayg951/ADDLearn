@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import auth, users, courses, categories, chapters
+from .routers import auth, users, courses, categories, chapters, ratings
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -38,6 +38,7 @@ app.include_router(users.routers)
 app.include_router(courses.routers)
 app.include_router(categories.routers)
 app.include_router(chapters.routers)
+app.include_router(ratings.routers)
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", reload=True)
