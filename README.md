@@ -1,6 +1,8 @@
 # ADDLearn
 This is the Learning Management System developed by team ADD
 
+AddLearn is an innovative e-learning platform designed to provide a seamless and interactive educational experience for students and educators. Developed with a modern tech stack, the platform features a user-friendly interface built using React and Next.js, ensuring smooth navigation and responsive design. The backend, powered by FastAPI, handles essential functionalities such as user authentication, course management, and data processing. AddLearn allows instructors to create and manage courses, upload multimedia content, and monitor student engagement. Students can track their progress with a unique system that matches completed chapters with available content, providing real-time updates. The platform also includes a rating system where students can only rate a course upon completion, ensuring that feedback is informed and constructive. With PostgreSQL as the database backbone, AddLearn supports efficient data management and complex queries. While currently designed as a monolithic application, the platform is being actively developed, with future enhancements planned to further improve scalability, feature set, and user experience.
+
 The backend of this project is available on this repo and the front end can be seen on the following git repo -> 
 https://github.com/DevanshSK/add-learn
 
