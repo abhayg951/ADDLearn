@@ -25,4 +25,6 @@ https://github.com/DevanshSK/add-learn
 - `For windows` -> `pip install -r requirements.txt`
 - `for Linux/mac` -> `pip3 install -r requirements.txt`
   - Now, run the `uvicorn` using the following command `uvicorn app.main:app --reload`.
+ 
+  Working on V2 - https://github.com/abhayg951/ADDLearnV2
     
